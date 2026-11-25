@@ -452,12 +452,32 @@ def photo_html(ph, cls="ph", empty="❄"):
             + (f'<span>© {H.escape(cr)}</span>' if cr else "") + '</div>')
 
 
+# 사진 클릭 → 확대 보기 (원본 크기까지, 비율 유지). 바깥이나 ✕ 누르거나 Esc로 닫기
+LIGHTBOX = """<div id="lb" onclick="this.style.display='none'"><span>✕</span><img alt=""></div>
+<style>.ph img{cursor:zoom-in}#lb{display:none;position:fixed;inset:0;z-index:99;background:#000d;align-items:center;justify-content:center;cursor:zoom-out}#lb img{max-width:96vw;max-height:94vh;width:auto;height:auto;border-radius:6px;box-shadow:0 4px 20px #000a}#lb span{position:absolute;top:10px;right:16px;color:#fff;font-size:28px}</style>
+<script>document.addEventListener('click',function(e){var t=e.target;if(t.tagName==='IMG'&&t.closest('.ph')){var b=document.getElementById('lb');b.querySelector('img').src=t.src;b.style.display='flex';}});document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('lb').style.display='none';});</script>"""
+
 IMG_DIR = None        # 고른 사진을 저장할 폴더 (site/img). main에서 정함
 
 
 def _slug(key):
     import hashlib
     return hashlib.md5(key.encode("utf-8")).hexdigest()[:10]
+
+
+def find_file(path):
+    """파일이 그 자리에 없으면 같은 폴더 아래(하위 폴더 포함)에서 같은 이름을 찾음.
+    (GitHub에 폴더째 올리다 photos/photos/ 처럼 한 겹 더 들어가도 찾도록)"""
+    if os.path.exists(path):
+        return path
+    top = os.path.dirname(path)
+    base = os.path.basename(path)
+    while top and not os.path.isdir(top):
+        top = os.path.dirname(top)
+    for root, _, files in os.walk(top or "."):
+        if base in files:
+            return os.path.join(root, base)
+    return None
 
 
 def chosen_photo(key):
@@ -473,7 +493,10 @@ def chosen_photo(key):
     try:
         if e.get("local"):                                   # 직접 올린 사진
             import shutil
-            shutil.copyfile(os.path.join(here, e["local"]), dst)
+            src = find_file(os.path.join(here, e["local"]))
+            if not src:
+                raise FileNotFoundError(e["local"])
+            shutil.copyfile(src, dst)
             return {"src": f"img/{fn}", "credit": e.get("credit", ""), "lic": e.get("lic", "")}
         title = e["file"]
         ck = "commons|" + title
@@ -648,6 +671,7 @@ def write_html(path, rank, day, wk, obs_tm, note, now, fc_base=None, next_up=Non
 </div>{('<div class="meta">' + H.escape(note.strip()) + '</div>') if note else ''}
 {''.join(rows)}
 <div class="meta">점수 = 09시 예상적설 − 녹을 위험(쌓인 눈 이하) + 0.3×7일신적설 − 1.5×산행중 눈시간 − 0.05×강수확률(%)</div>
+{LIGHTBOX}
 </body></html>"""
     with open(path, "w", encoding="utf-8") as f:
         f.write(doc)

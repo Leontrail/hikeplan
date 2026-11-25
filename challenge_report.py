@@ -273,6 +273,9 @@ def _load_ramblr():
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAMBLR = _load_ramblr()
+# 램블러 캡처 그림: routes 폴더 아래 어디에 있든(routes/routes/ 처럼 겹쳐도) 트립 번호로 찾음
+ROUTE_IMG = {f[:-4]: os.path.join(r, f) for r, _, fs in os.walk(os.path.join(HERE, "routes"))
+             for f in fs if f.lower().endswith(".jpg")}
 
 
 def _hm(t):
@@ -363,7 +366,7 @@ def ramblr_html(mts):
         stat = (f'<b>{H.escape(d["dist"])}</b> · {_hm(d["dur"])} (걷는 시간 {_hm(d["move"])}) · '
                 f'최고 {d["top"]:,}m · 누적 상승 {d["gain"]:,}m · 난이도 {H.escape(d["diff"])} · {kind}')
         notes = "".join(f"<li>{H.escape(x)}</li>" for x in d.get("sum", []))
-        has_img = os.path.exists(os.path.join(HERE, "routes", f"{tid}.jpg"))
+        has_img = tid in ROUTE_IMG
         fig = (f'<a href="{H.escape(url)}" target="_blank" rel="noopener"><img class="rimg" src="routes/{tid}.jpg" alt="경로·고도" loading="lazy"></a>'
                if has_img else
                f'<div class="rv">{route_svg(d["S"], d["W"], d.get("loop"))}{profile_svg(d["S"], d["W"])}</div>')
@@ -498,6 +501,7 @@ def build(group, rows, key, now, next_up, outdir):
 <div class="tile wn" style="text-align:left"><div class="ms">이번 주 <b>금·토·일</b> 산행시간(08~15시) 기준이에요. 파란 테두리는 토·일.<br>비·눈은 기상청 예보(약 4일), 그 이후와 낙뢰는 Open-Meteo 예보(참고)예요.</div></div></div></div>
 {''.join(cards)}
 <div class="meta">완등 기록: GitHub의 challenges.csv에서 해당 산 done 칸에 날짜(예: 2027-03-13)를 적으면 ✅로 바뀌어요.</div>
+{S.LIGHTBOX}
 </body></html>"""
     with open(os.path.join(outdir, g["file"]), "w", encoding="utf-8") as f:
         f.write(doc)
@@ -516,6 +520,10 @@ def main():
     os.makedirs(a.report_dir, exist_ok=True)
     next_up = S.next_slot(now, a.schedule)
     S.IMG_DIR = os.path.join(a.report_dir, "img")
+    import shutil                                    # 램블러 캡처 그림을 웹페이지 routes/ 로 복사
+    os.makedirs(os.path.join(a.report_dir, "routes"), exist_ok=True)
+    for tid, src in ROUTE_IMG.items():
+        shutil.copyfile(src, os.path.join(a.report_dir, "routes", f"{tid}.jpg"))
     cache = os.path.join(a.report_dir, "cache.json")
     S.load_cache(cache if os.path.exists(cache) else None)
     for grp in GROUPS:
