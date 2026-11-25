@@ -7,7 +7,8 @@
   2) 현재 적설깊이(sd_tot)      : 기상청 고해상도(500m) 격자 관측분석
   3) 지난 7일 신적설 합계(sd_24h) : 같은 격자자료, 매일 00시 값 7개 합산
   4) 목표일 예보 : 산악예보(정상 기준, mountainNum) 우선, 없으면 단기예보(5km 격자)
-     - 목표일 = 토요일 예보가 있으면 토요일, 아직 없으면 예보가 있는 마지막 날 (--day 로 지정 가능)
+     - 목표일 = 이번 토요일(토 11시부터는 일요일, 일 11시부터는 다음 주 토요일).
+       그날 예보가 아직 없으면 예보가 있는 마지막 날 (--day 로 지정 가능)
      - 목표일 09시까지 신적설, 산행시간(08~15시) 눈 오는 시간, 영상 기온 시간, 비
   5) 점수 = 09시 예상적설 − 녹을 위험(0.5×영상시간 + 2×비mm, 단 쌓인 눈 이하) + 0.3×7일신적설 − 1.5×산행중 눈시간 − 0.05×강수확률(%)
 
@@ -353,6 +354,19 @@ def summarize_fcst(ser, now, day):
     }
 
 
+def target_hike_day(now):
+    """산행 목표일: 평일엔 이번 토요일, 토요일 11시부터는 일요일,
+    일요일 11시부터는 다음 주 토요일."""
+    wd, h = now.weekday(), now.hour             # 월=0 … 토=5, 일=6
+    if wd == 5:
+        add = 0 if h < 11 else 1
+    elif wd == 6:
+        add = 0 if h < 11 else 6
+    else:
+        add = 5 - wd
+    return (now + timedelta(days=add)).date()
+
+
 def last_full_day(ser):
     """산행시간(15시)까지 예보가 있는 가장 늦은 날짜."""
     last = max((t for c in ser.values() for t in c), default=None)
@@ -433,8 +447,9 @@ def photo_html(ph, cls="ph", empty="❄"):
     """카드 사진: 링크 없이 이미지만, 아래에 작게 출처(자유 이용 사진의 표시 조건)."""
     if not ph:
         return f'<div class="{cls} none">{empty}</div>'
+    cr = " · ".join(x for x in (ph.get("credit"), ph.get("lic")) if x)
     return (f'<div class="{cls}"><img src="{H.escape(ph["src"])}" alt="" loading="lazy">'
-            f'<span>© {H.escape(ph.get("credit") or "")} · {H.escape(ph.get("lic") or "")}</span></div>')
+            + (f'<span>© {H.escape(cr)}</span>' if cr else "") + '</div>')
 
 
 IMG_DIR = None        # 고른 사진을 저장할 폴더 (site/img). main에서 정함
@@ -459,7 +474,7 @@ def chosen_photo(key):
         if e.get("local"):                                   # 직접 올린 사진
             import shutil
             shutil.copyfile(os.path.join(here, e["local"]), dst)
-            return {"src": f"img/{fn}", "credit": e.get("credit", "직접 촬영"), "lic": e.get("lic", "")}
+            return {"src": f"img/{fn}", "credit": e.get("credit", ""), "lic": e.get("lic", "")}
         title = e["file"]
         ck = "commons|" + title
         meta = CACHE["photo"].get(ck)
@@ -487,7 +502,7 @@ def chosen_photo(key):
 
 
 def photo_for(name, photo_q=None, must=None, key=None):
-    if CHOSEN:
+    if (key or name) in CHOSEN:                      # 직접 고른 사진이 있으면 그것만
         return chosen_photo(key or name)
     """산 사진 1장 (캐시 → 관광공사 → 위키미디어). 찾은 사진은 14일, 못 찾은 결과는 1일 동안 다시 찾지 않음."""
     ck = name + ("|" + ",".join(must) if must else "")
@@ -732,10 +747,7 @@ def main():
     now = datetime.now(KST)
     obs_tm = (now - timedelta(minutes=40)).replace(second=0, microsecond=0)
     obs_tm = obs_tm.replace(minute=0 if obs_tm.minute < 30 else 30)
-    days = (5 - now.weekday()) % 7
-    if days == 0 and now.hour >= 15:          # 토요일 산행시간이 지났으면 다음 주 토요일
-        days = 7
-    sat = (now + timedelta(days=days)).date()
+    sat = target_hike_day(now)
     midnights = [datetime(now.year, now.month, now.day, tzinfo=KST) - timedelta(days=i) for i in range(7)]
 
     IMG_DIR = os.path.join(a.report_dir, "img") if a.report_dir else None
@@ -788,7 +800,7 @@ def main():
     if day < now.date():
         day = now.date()
     wk = "월화수목금토일"[day.weekday()]
-    note = "" if day == sat else f"  ※ 토요일({sat}) 예보 전이라 예보가 있는 마지막 날 기준"
+    note = "" if day == sat else f"  ※ {'월화수목금토일'[sat.weekday()]}요일({sat}) 예보 전이라 예보가 있는 마지막 날 기준"
 
     # 3단계: 점수 계산
     results = []

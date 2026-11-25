@@ -249,7 +249,7 @@ def schedule_html(plan_rows, key, now):
 
 def course_photo(mts, region, key):
     """코스 사진 1장: 직접 고른 사진(photos.json) → 없으면 자동 검색(고른 사진이 하나도 없을 때만)."""
-    if S.CHOSEN:
+    if key in S.CHOSEN:
         return S.chosen_photo(key)
     for r in mts:
         ph = S.photo_for(r["name"], r.get("photo_q", "").strip() or None, must=region)
@@ -259,7 +259,7 @@ def course_photo(mts, region, key):
 
 
 def photo_html(ph):
-    return S.photo_html(ph, "ph top", "⛰")
+    return S.photo_html(ph, "ph", "⛰")
 
 
 def _load_ramblr():
@@ -271,6 +271,7 @@ def _load_ramblr():
         return {}
 
 
+HERE = os.path.dirname(os.path.abspath(__file__))
 RAMBLR = _load_ramblr()
 
 
@@ -353,7 +354,8 @@ def ramblr_html(mts):
             continue
         label = H.escape(r.get("ramblr_label", "").strip() or r["name"])
         link = f'<a class="rb" href="{H.escape(url)}" target="_blank" rel="noopener">🥾 {label} <b>램블러 ›</b></a>'
-        d = RAMBLR.get(url.rstrip("/").split("/")[-1])
+        tid = url.rstrip("/").split("/")[-1]
+        d = RAMBLR.get(tid)
         if not d or not d.get("S"):
             blocks.append(f'<div class="rt">{link}</div>')
             continue
@@ -361,13 +363,15 @@ def ramblr_html(mts):
         stat = (f'<b>{H.escape(d["dist"])}</b> · {_hm(d["dur"])} (걷는 시간 {_hm(d["move"])}) · '
                 f'최고 {d["top"]:,}m · 누적 상승 {d["gain"]:,}m · 난이도 {H.escape(d["diff"])} · {kind}')
         notes = "".join(f"<li>{H.escape(x)}</li>" for x in d.get("sum", []))
-        blocks.append(f'<div class="rt">{link}<div class="rs">{stat}</div>'
-                      f'<div class="rv">{route_svg(d["S"], d["W"], d.get("loop"))}{profile_svg(d["S"], d["W"])}</div>'
-                      f'<ul class="rn">{notes}</ul></div>')
+        has_img = os.path.exists(os.path.join(HERE, "routes", f"{tid}.jpg"))
+        fig = (f'<a href="{H.escape(url)}" target="_blank" rel="noopener"><img class="rimg" src="routes/{tid}.jpg" alt="경로·고도" loading="lazy"></a>'
+               if has_img else
+               f'<div class="rv">{route_svg(d["S"], d["W"], d.get("loop"))}{profile_svg(d["S"], d["W"])}</div>')
+        blocks.append(f'<div class="rt">{link}<div class="rs">{stat}</div>{fig}<ul class="rn">{notes}</ul></div>')
     if not blocks:
         return ""
     return ('<div class="rts">' + "".join(blocks) +
-            '<div class="s"><b style="color:#2f9e44">●</b> 출발 · <b style="color:#c92a2a">●</b> 도착(편도일 때) · <b style="color:#1c7ed6">●</b> 봉우리 — 경로와 기록은 위 램블러 공개 기록을 요약한 거예요.</div></div>')
+            '<div class="s">지도·고도 그래프는 램블러 기록 화면 캡처(지도 © OpenMapTiles © OpenStreetMap), 요약은 공개 기록을 정리한 거예요. 그림을 누르면 램블러 기록이 열려요.</div></div>')
 
 
 def build(group, rows, key, now, next_up, outdir):
@@ -392,9 +396,12 @@ def build(group, rows, key, now, next_up, outdir):
     done_n = sum(1 for r in counted if r["done"].strip())
     plan_rows = []                                   # (계획, 코스이름, 미완등 산들, 날짜별 판정)
     items, good_sat = [], []
-    for ck, mts in courses.items():
+    for no, (ck, mts) in enumerate(courses.items(), 1):
         todo = [r for r in mts if not r["done"].strip()]
-        names = " + ".join(H.escape(r["name"]) + (" ✅" if r["done"].strip() else "") for r in mts)
+        # 번호: 한 산이면 "1", 연계·1일 2산이면 "2-1", "2-2"
+        names = "".join(f'<div class="pk"><span class="no">{no}' + (f"-{i}" if len(mts) > 1 else "") + '</span>'
+                        f'{H.escape(r["name"])}{" ✅" if r["done"].strip() else ""}</div>'
+                        for i, r in enumerate(mts, 1))
         badge = '<span class="bg">1일 2산</span>' if len(mts) > 1 else ""
         km, gain = mts[0].get("course_km", ""), mts[0].get("course_gain", "")
         if not (km and gain):                        # CSV에 없으면 램블러 기록 합계로
@@ -410,8 +417,8 @@ def build(group, rows, key, now, next_up, outdir):
             when = ", ".join(r["done"].strip() for r in mts)
             if mts[0].get("plan", "").strip():
                 plan_rows.append((mts[0]["plan"].strip(), " + ".join(r["name"] for r in mts), [], {}))
-            items.append((9, f'<div class="card col done">{photo_html(cps[ck])}<div class="tx"><div class="hd"><b class="cn">✅ {" + ".join(H.escape(r["name"]) for r in mts)}</b>'
-                             f'<span class="s">{stat}</span></div><div class="bd">완등 {H.escape(when)}</div></div></div>'))
+            items.append((9, f'<div class="card cc done"><div class="top">{photo_html(cps[ck])}<div class="tx"><div class="hd"><b class="cn">{names}</b>'
+                             f'<div class="s">{stat}</div></div><div class="bd">완등 {H.escape(when)}</div></div></div></div>'))
             continue
         per = [(r["name"], fc[r["name"]]) for r in todo]
         day_j = {d: merge([(n, dj[d]) for n, dj in per]) for d in days}
@@ -436,9 +443,10 @@ def build(group, rows, key, now, next_up, outdir):
                     good_sat.append(" + ".join(r["name"] for r in todo))
         note = f'<div class="s">{notes}</div>' if notes else ""
         note = ramblr_html(mts) + note
-        items.append((sat_lvl, f'<div class="card col">{photo_html(cps[ck])}<div class="tx"><div class="hd"><b class="cn">{names}</b>{badge}'
-                               f'<span class="s">{stat}</span></div>'
-                               f'<div class="bd"><div class="tiles">{tiles}</div>{note}</div></div></div>'))
+        items.append((sat_lvl, f'<div class="card cc"><div class="top">{photo_html(cps[ck])}<div class="tx"><div class="hd"><b class="cn">{names}</b>'
+                               f'<div class="s">{badge}{stat}</div></div>'
+                               f'<div class="tiles">{tiles}</div></div></div>'
+                               + (f'<div class="more">{note}</div>' if note else "") + '</div>'))
     items.sort(key=lambda x: x[0])                       # 토요일 날씨 좋은 코스부터, 완등 코스는 맨 아래
     cards = [c for _, c in items]
     total = len(counted)
@@ -451,11 +459,16 @@ def build(group, rows, key, now, next_up, outdir):
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{g['title']}</title>
 <style>{S.BASE_CSS}
 .prog{{background:#e3e8ee;border-radius:6px;height:10px;margin:6px 0}}.prog i{{display:block;height:10px;border-radius:6px;background:#2a7de1}}
-.card.col{{flex-direction:column}}.ph.top{{flex:none;height:150px}}.ph.top.none{{font-size:28px;height:56px}}@media(min-width:600px){{.ph.top{{height:200px}}}}
+.pk{{line-height:1.35}}.no{{display:inline-block;min-width:2.1em;margin-right:4px;font-size:12px;font-weight:700;color:#fff;background:#4a5563;border-radius:6px;padding:0 5px;text-align:center;vertical-align:2px}}
+.card.cc{{flex-direction:column}}.cc .top{{display:flex}}.cc .hd{{display:block}}.cc .hd .s{{margin-top:3px}}.cc .bg{{margin:0 6px 0 0}}
+.more{{padding:0 12px 10px}}.more .rts{{margin-top:0}}
+@media(max-width:599px){{.tiles{{gap:4px}}.tile{{padding:6px 2px}}.tile .ic{{font-size:26px}}.tile .lb{{font-size:13px}}.tile .dh{{font-size:12px}}.tile .dh small{{display:block;margin:0}}
+.rv{{flex-direction:column}}.rv .map{{flex:none;width:100%;height:110px}}}}
 .rb{{display:inline-block;background:#eef5ee;color:#1b5e20;border:1px solid #b9dbbb;border-radius:16px;padding:4px 10px;font-size:13px;text-decoration:none}}
 .rts{{margin-top:10px;border-top:1px dashed #d0d7de;padding-top:8px}}.rt{{margin-bottom:10px}}.rs{{font-size:12.5px;color:#333;margin:5px 0}}
 .rv{{display:flex;gap:6px;align-items:stretch}}.rv .map{{flex:0 0 96px;height:96px}}.rv .prof{{flex:1;min-width:0;height:auto;background:#fffaf3;border-radius:8px}}
 .prof text{{font-size:9px;fill:#666}}.prof text.pk{{font-size:9.5px;fill:#1c4f8a;font-weight:700}}
+.rimg{{display:block;width:100%;max-width:380px;border-radius:8px;margin:4px 0}}
 .rn{{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:#444}}.rn li{{margin:2px 0}}
 .cn{{font-size:17px}}.bg{{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:#fff;background:#2a7de1;border-radius:10px;padding:1px 7px;vertical-align:middle}}
 .tiles{{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}}

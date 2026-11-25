@@ -1,1 +1,22 @@
-{}
+{
+ "설악산": {
+  "local": "photos/seoraksan.jpg",
+  "credit": ""
+ },
+ "계방산": {
+  "local": "photos/gyebangsan.jpg",
+  "credit": ""
+ },
+ "덕유산": {
+  "local": "photos/deogyusan.jpg",
+  "credit": ""
+ },
+ "가리왕산": {
+  "local": "photos/gariwangsan.jpg",
+  "credit": ""
+ },
+ "한라산": {
+  "local": "photos/hallasan.jpg",
+  "credit": ""
+ }
+}
