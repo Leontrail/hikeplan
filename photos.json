@@ -18,5 +18,29 @@
  "한라산": {
   "local": "photos/hallasan.jpg",
   "credit": ""
+ },
+ "태백산": {
+  "local": "photos/taebaeksan.jpg",
+  "credit": ""
+ },
+ "소백산": {
+  "local": "photos/sobaeksan.jpg",
+  "credit": ""
+ },
+ "지리산(천왕봉)": {
+  "local": "photos/jirisan_cheonwang.jpg",
+  "credit": ""
+ },
+ "hamyang:1": {
+  "local": "photos/jirisan_cheonwang.jpg",
+  "credit": ""
+ },
+ "함백산": {
+  "local": "photos/hambaeksan.jpg",
+  "credit": ""
+ },
+ "무등산": {
+  "local": "photos/mudeungsan.jpg",
+  "credit": ""
  }
 }
