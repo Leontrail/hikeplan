@@ -39,6 +39,7 @@ jobs:
           python snow_report.py --csv top20_snow_mountains.csv --report-dir site --out site/snow_latest.csv
           cp site/snow_latest.html site/index.html
           python challenge_report.py --csv challenges.csv --report-dir site || echo "챌린지 탭 생성 실패(설산 페이지는 그대로 배포)"
+          cp -r routes site/routes || echo "램블러 캡처 폴더 없음"
 
       - name: 결과 파일 보관(30일)
         uses: actions/upload-artifact@v4
