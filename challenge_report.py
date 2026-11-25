@@ -528,9 +528,41 @@ def main():
     S.load_cache(cache if os.path.exists(cache) else None)
     for grp in GROUPS:
         sub = [r for r in rows if r["group"] == grp]
-        if sub:
+        if not sub:
+            continue
+        try:
             build(grp, sub, key, now, next_up, a.report_dir)
+        except BaseException as ex:                  # 기상청 접속 실패(sys.exit) 포함: 탭이 사라지지 않게
+            import traceback
+            traceback.print_exc()
+            fallback_page(grp, now, ex, a.report_dir)
     S.save_cache(cache)
+
+
+def fallback_page(grp, now, ex, outdir):
+    """이번 실행에서 탭을 못 만들었을 때: 지난번에 배포된 페이지를 그대로 두고 위에 안내만 붙임.
+    지난 페이지도 없으면 오류 내용을 보여주는 빈 페이지를 만듦(404 대신)."""
+    g = GROUPS[grp]
+    msg = (f'<div class="meta" style="background:#fff3cd;padding:8px 12px;border-radius:8px">'
+           f'⚠ {now:%m월 %d일 %H:%M} 실행에서 이 탭을 새로 만들지 못해 지난번 내용을 보여줘요. '
+           f'<span class="s">({H.escape(type(ex).__name__)}: {H.escape(str(ex)[:150])})</span></div>')
+    old = None
+    try:
+        r = requests.get(S.CACHE_URL.rsplit("/", 1)[0] + "/" + g["file"], timeout=10)
+        if r.ok and "<nav" in r.text:
+            old = r.text
+    except Exception:
+        pass
+    if old:
+        old = re.sub(r'<div class="meta" style="background:#fff3cd.*?</div>\n?', "", old, flags=re.S)
+        doc = old.replace("</nav>", "</nav>" + msg + "\n", 1)
+    else:
+        doc = (f'<!doctype html><html lang="ko"><head><meta charset="utf-8">'
+               f'<meta name="viewport" content="width=device-width,initial-scale=1">'
+               f'<title>{g["title"]}</title><style>{S.BASE_CSS}</style></head><body>'
+               f'{S.nav_html(g["tab"])}{msg}</body></html>')
+    with open(os.path.join(outdir, g["file"]), "w", encoding="utf-8") as f:
+        f.write(doc)
 
 
 if __name__ == "__main__":
