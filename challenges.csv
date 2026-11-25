@@ -1,0 +1,24 @@
+﻿group,order,name,height_m,lat,lon,mountainNum,done,note,course,course_km,course_gain,plan,counted,photo_q,ramblr_label,ramblr,fc_point,mtId
+hamyang,1,지리산(천왕봉),1915,35.337100,127.730600,86,,,1,18.3,1758,,,Cheonwangbong|Jirisan,지리산 천왕봉,https://www.ramblr.com/web/mymap/trip/679123/11202921/,,11H002P1
+hamyang,1,도숭산,1044,35.599422,127.722444,,,,2,18.9,1669,,,,도숭산,https://www.ramblr.com/web/mymap/trip/1040244/11132516/,,
+hamyang,2,삼봉산,1187,35.447448,127.669417,,,,2,18.9,1669,,,,삼봉산,https://www.ramblr.com/web/mymap/trip/266209/11004533/,,
+hamyang,1,와불산,1161,35.395903,127.748331,,,,3,16.0,1423,,,,와불산,https://www.ramblr.com/web/mymap/trip/266209/11171477/,,
+hamyang,2,삼정산,1261,35.377160,127.625829,,,,3,16.0,1423,,,,삼정산,https://www.ramblr.com/web/mymap/trip/266209/11168051/,,
+hamyang,1,기백산,1330,35.706667,127.781944,94,,,4,17.5,1276,,,Gibaeksan,기백산 → 금원산,https://www.ramblr.com/web/mymap/trip/266209/11195592/,,11H015P1
+hamyang,2,금원산,1353,35.730858,127.761084,,,,4,17.5,1276,,,Geumwonsan,,,,
+hamyang,1,황석산,1190,35.655200,127.755400,126,,,5,16.3,1186,,,Hwangseoksan,황석산 → 거망산,https://www.ramblr.com/web/mymap/trip/324431/11194890/,,11H042P0
+hamyang,2,거망산,1184,35.683180,127.736984,,,,5,16.3,1186,,,,,,,
+hamyang,1,월봉산,1279,35.727710,127.720756,,,,6,22.9,2087,,,,월봉산,https://www.ramblr.com/web/mymap/trip/1143626/10663562/,,
+hamyang,2,남덕유산,1507,35.767536,127.679522,,,,6,22.9,2087,,,Namdeogyusan|Deogyusan,남덕유산,https://www.ramblr.com/web/mymap/trip/1055055/11188082/,,
+hamyang,1,감투산,1036,35.592075,127.669364,,,,7,9.9,857,,,,감투산 → 대봉산 계관봉,https://www.ramblr.com/web/mymap/trip/1253599/11208647/,,
+hamyang,2,대봉산,1252,35.603682,127.695533,,,계관봉,7,9.9,857,,,Daebongsan Hamyang,,,,
+hamyang,1,영취산,1075,35.642725,127.620021,,,,8,8.2,664,,,,영취산 → 백운산,https://www.ramblr.com/web/mymap/trip/266209/10934326/,,
+hamyang,2,백운산,1279,35.618507,127.635392,,,함양 백전면 백운산,8,8.2,664,,,,,,,
+yeongnam,1,영축산,1081,35.516015,129.052750,,,,1,,,jan_apr,,Yeongchuksan|Chwiseosan,영축산 → 신불산,https://www.ramblr.com/web/mymap/trip/1360343/10155376/,,
+yeongnam,2,신불산,1159,35.539700,129.052500,92,,,1,,,jan_apr,,Sinbulsan,,,,11H012P1
+yeongnam,1,가지산,1241,35.620356,129.003089,90,,,2,,,2027-02-28,,Gajisan,상운산 → 가지산 → 운문산,https://www.ramblr.com/web/mymap/trip/632078/10192571/,,11H005P1
+yeongnam,2,운문산,1188,35.615556,128.959167,114,,,2,,,2027-02-28,,Unmunsan,,,,11H013P1
+yeongnam,1,천황산,1189,35.557929,128.972195,127,,예보는 옆 재약산 지점 사용,3,,,2027-03-01,,Cheonhwangsan Miryang|Jaeyaksan,재약산 → 천황산,https://www.ramblr.com/web/mymap/trip/1222370/8101386/,재약산,11H039P0
+yeongnam,2,재약산,1108,35.545321,128.980166,127,,7봉 인증 대상 아님 — 천황산과 함께 산행,3,,,2027-03-01,N,Jaeyaksan,,,,11H039P0
+yeongnam,1,간월산,1069,35.552149,129.040123,,,,4,,,jan_apr,,Ganwolsan,배내봉 → 간월산,https://www.ramblr.com/web/mymap/trip/1274934/10162396/,,
+yeongnam,2,고헌산,1034,35.641394,129.084691,,,,4,,,jan_apr,,Goheonsan,고헌산,https://www.ramblr.com/web/mymap/trip/1006060/6462177/,,
